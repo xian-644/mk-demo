@@ -8,7 +8,7 @@
     <div class="event-list">
       <div class="left">
         <div class="sector"></div>
-        <ul class="img-list">
+        <ul class="img-list" id="anime-left">
           <li v-for="el in imgList" :key="el.key" :class="`img${el.key}`">
             <img :src="el.img" alt="" srcset="" class="ratio-img">
               <span class="key">{{ el.key }}</span>
@@ -36,6 +36,32 @@
 </template>
 
 <script setup>
+import anime from 'animejs/lib/anime.es.js'
+import { onMounted, ref } from 'vue'
+
+onMounted(() => {
+  const leftDom = document.querySelector('#anime-left')
+  // 左侧动画
+  anime.timeline({
+    // 全局 easing（可被每个 add 覆盖）
+    easing: 'easeOutQuad'
+  }).add({
+    targets: leftDom,
+    opacity: [0, 1],
+    duration: 1000
+    //  淡入
+  })
+  .add({
+    // 快速旋转
+    targets: leftDom,
+    transformOrigin: 'center center', // ← 控制旋转中心点
+    rotate: '5turn', // = 360deg
+    duration: 1200
+  }).add({
+    // 文字淡出
+  })
+})
+
 import logo01 from './imgs/01.png'
 import logo02 from './imgs/02.png'
 import logo03 from './imgs/03.png'
@@ -133,7 +159,7 @@ const eventList = [
 .event-list-wrapper {
   width: 100Vw;
   height: 100vh;
-  background: #030A18;
+  background: black;
 }
 
 .event-list-content {
@@ -264,6 +290,10 @@ const eventList = [
 
 .img-list{
   list-style: none;
+  opacity: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 .img-list li{
   position: absolute;

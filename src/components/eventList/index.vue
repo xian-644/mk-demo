@@ -2,7 +2,7 @@
 <div class="event-list-wrapper">
   <div class="event-list-content">
     <div class="title">
-      <img src="./imgs/title.png" alt="" srcset="">
+      <!-- <img src="./imgs/title.png" alt="" srcset=""> -->
     </div>
 
     <div class="event-list">
@@ -11,22 +11,32 @@
         <ul class="img-list" id="anime-left">
           <li v-for="el in imgList" :key="el.key" :class="`img${el.key}`">
             <img :src="el.img" alt="" srcset="" class="ratio-img">
-              <span class="key">{{ el.key }}</span>
-              <span class="ratio">占比：{{ el.ratio }}%</span>
+
+            </img>
+          </li>
+
+          <li v-for="el in eventList" :key="el.key" :class="`text${el.key}  img_text`">
+            <span class="key">{{ el.key }}</span>
+            <span class="ratio">占比：{{ el.ratio }}%</span>
+
             </img>
           </li>
         </ul>
+                   
+
       </div>
-      <div class="right">
+      <div class="right" >
         <ul class="name-list">
           <li v-for="el in eventList" :style="`color: ${ el.color }`">{{ el.name }}</li>
         </ul>
         <ul class="data-list">
           <li v-for="el in eventList" :class="el.data.class">
+           <div class="hidden">
             <span class="time">{{ el.data.time }}</span>
             <span class="origin_to">{{ el.data.origin }} - - - -▶  {{ el.data.to }}</span>
             <span class="type">{{ el.data.type }}</span>
             <span class="level">{{ el.data.level }}</span>
+           </div>
           </li>
         </ul>
       </div>
@@ -54,13 +64,41 @@ onMounted(() => {
   .add({
     // 快速旋转
     targets: leftDom,
-    transformOrigin: 'center center', // ← 控制旋转中心点
-    rotate: '5turn', // = 360deg
-    duration: 1200
+    transformOrigin: '50%, 50%', // ← 控制旋转中心点
+    rotate: '3turn', // = 360deg
+    duration: 1200,
+
   }).add({
-    // 文字淡出
+    // 文字淡入
+    targets: leftDom.querySelectorAll('.img_text'),
+    opacity: [0, 1],
+    easing: 'easeOutQuad',
+    delay: anime.stagger(1000, { start: 0 }) // 每个子元素延迟 100ms
+  }).add({
+    // 单位淡入
+    targets: document.querySelectorAll('.name-list li'),
+    opacity: [0, 1],
+    duration: 1000,
+    easing: 'easeOutQuad',
+    delay: anime.stagger(1000, { start: 0 }) // 每个子元素延迟 100ms
+  }, '-=5000')
+  .add({
+    // 表格淡出
+    targets: document.querySelectorAll('.data-list li'),
+    opacity: [0, 1],
+    easing: 'easeOutQuad',
+    duration: 1000,
+    complete: function () {
+      // css 动画完成， 开始执行js 动画
+      handelJSAnimation()
+    }
   })
 })
+
+const currentActive = ref(1)
+const handelJSAnimation = () => {
+  alert(9)
+}
 
 import logo01 from './imgs/01.png'
 import logo02 from './imgs/02.png'
@@ -159,7 +197,9 @@ const eventList = [
 .event-list-wrapper {
   width: 100Vw;
   height: 100vh;
-  background: black;
+  background: #030A18;
+
+  --ration: 72deg;
 }
 
 .event-list-content {
@@ -184,8 +224,9 @@ const eventList = [
 }
 
 .sector {
-  width: 160px;
-  height: 160px;
+  width: 140px;
+  height: 140px;
+  margin: 10px;
   border-radius: 50%;
   overflow: hidden;
   position: absolute;
@@ -196,9 +237,8 @@ const eventList = [
   width: 100%;
   height: 100%;
   color: #444D58;
-  background: radial-gradient(circle, transparent 40%, currentColor 40%);
+  background: radial-gradient(circle, transparent 30%, currentColor 50%);
 }
-
 
 
 
@@ -297,28 +337,106 @@ const eventList = [
 }
 .img-list li{
   position: absolute;
-  transform-origin: 50% 100%;
+  transform-origin: 80px 80px;
 }
-
 
 
 .img-list .img01{
-  transform: translate(80px , -10px );
+  transform: rotate(var(--ration));
+  .key{
+color: #fff;
+}
+.ratio{
+  color: #fff;
+}
+
 }
 
 .img-list .img02{
-  transform: translate(90px , 56px );
+
+   transform: rotate(calc(2 * var(--ration)));
 }
 
 .img-list .img03{
-  transform: translate(36px , 90px );
+  transform: rotate(calc(3 * var(--ration)));
 }
 
 .img-list .img04{
-  transform: translate(-8px , 58px );
+
+   transform: rotate(calc(4 * var(--ration)));
 }
 
 .img-list .img05{
-  transform: translate(-2px , -8px );
+
+}
+
+.img_text .key{
+  color: white;
+  position: absolute;
+  display: block;
+  font-size: 14px;
+}
+
+.img_text .ratio{
+  color: white;
+  position: absolute;
+  display: block;
+  font-size: 12px;
+  width: 80px;
+}
+
+.text01 .key{
+  top: 44px;
+  left: 84px;
+}
+
+.text01 .ratio{
+  top: 20px;
+  left: 80px;
+}
+
+.text02 .key{
+  top: 70px;
+  left: 100px;
+}
+
+.text02 .ratio{
+  top: 89px;
+  left: 110px;
+}
+
+.text03 .key{
+  top: 94px;
+  left: 77px;
+}
+
+.text03 .ratio{
+  top: 130px;
+  left: 60px;
+}
+
+.text04 .key{
+  top: 82px;
+  left: 50px;
+}
+
+.text04 .ratio{
+  top: 98px;
+  left: 0px;
+}
+
+.text05 .key{
+  top: 50px;
+  left: 50px;
+}
+
+.text05 .ratio{
+  top: 30px;
+  left: 4px;
+}
+
+
+.hidden{
+  opacity: 0;
 }
 </style>

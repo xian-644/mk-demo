@@ -27,11 +27,11 @@
       </div>
       <div class="right">
         <ul class="name-list">
-          <li v-for="el in eventList" :style="`color: ${ el.color }`">{{ el.name }}</li>
+          <li :class="{'activeName': el.key == currentKey}" v-for="el in eventList" :style="`color: ${ el.color }`">{{ el.name }}</li>
         </ul>
-        <ul class="data-list hidden">
+        <ul class="data-list">
           <li v-for="el in currentList" :class="el.class">
-           <div>
+           <div class="hidden">
             <span class="time">{{ el.time }}</span>
             <span class="origin_to">{{ el.origin }} - - - -▶  {{ el.to }}</span>
             <span class="type">{{ el.type }}</span>
@@ -122,7 +122,6 @@ const handelListPush = () => {
 
 let animeTimer = ref(null);
 const handelJSAnimation = () => {
-  document.querySelector('.hidden').classList.remove('hidden');
   animeData()
   animeTimer = setInterval(() => {
     animeData()
@@ -140,6 +139,14 @@ const animeData = () => {
   const imgDom = document.querySelector(`.img${currentKey.value} img`);
   imgDom.classList.add('scaleLarger');
 
+  // 表格数据一条一条的展示
+  anime({
+    targets: document.querySelectorAll('.hidden'),
+    opacity: [0, 1],
+    easing: 'easeOutQuad',
+    duration: 1000,
+    delay: anime.stagger(300, { start: 0 }), // 每个子元素延迟 100ms
+  })
   
   
 
@@ -419,14 +426,23 @@ color: #fff;
 }
 
 
-.hidden span{
+.hidden {
   opacity: 0;
 }
 
 
 .scaleLarger{
-  transform: scale(1.15) ;
+  transform: scale(1.2) ;
   z-index: 999;
   transition: all 0.3s ease-in-out;
 }
+
+.activeName{
+  /* 放大  高亮*/
+  transform: scale(1.2) ;
+  z-index: 999;
+  font-weight: 700;
+  transition: all 0.3s ease-in-out;
+}
+
 </style>

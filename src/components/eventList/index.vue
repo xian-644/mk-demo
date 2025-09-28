@@ -2,7 +2,7 @@
 <div class="event-list-wrapper">
   <div class="event-list-content">
     <div class="title">
-      <!-- <img src="./imgs/title.png" alt="" srcset=""> -->
+      <img src="./imgs/title.png" alt="" srcset="">
     </div>
 
     <div class="event-list">
@@ -17,7 +17,7 @@
 
           <li v-for="el in eventList" :key="el.key" :class="`text${el.key}  img_text`">
             <span class="key">{{ el.key }}</span>
-            <span class="ratio">占比：{{ el.ratio }}%</span>
+            <span class="ratio">占比 <br />{{ el.ratio }}%</span>
 
             </img>
           </li>
@@ -25,17 +25,17 @@
                    
 
       </div>
-      <div class="right" >
+      <div class="right">
         <ul class="name-list">
           <li v-for="el in eventList" :style="`color: ${ el.color }`">{{ el.name }}</li>
         </ul>
-        <ul class="data-list">
-          <li v-for="el in eventList" :class="el.data.class">
-           <div class="hidden">
-            <span class="time">{{ el.data.time }}</span>
-            <span class="origin_to">{{ el.data.origin }} - - - -▶  {{ el.data.to }}</span>
-            <span class="type">{{ el.data.type }}</span>
-            <span class="level">{{ el.data.level }}</span>
+        <ul class="data-list hidden">
+          <li v-for="el in currentList" :class="el.class">
+           <div>
+            <span class="time">{{ el.time }}</span>
+            <span class="origin_to">{{ el.origin }} - - - -▶  {{ el.to }}</span>
+            <span class="type">{{ el.type }}</span>
+            <span class="level">{{ el.level }}</span>
            </div>
           </li>
         </ul>
@@ -47,12 +47,23 @@
 
 <script setup>
 import anime from 'animejs/lib/anime.es.js'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
+
+const props = defineProps({
+  eventList: {
+    type: Array,
+    default: () => []
+  },
+})
+
+onUnmounted(() => {
+  animeTimer && clearInterval(animeTimer);
+})
 
 onMounted(() => {
   const leftDom = document.querySelector('#anime-left')
   // 左侧动画
-  anime.timeline({
+  const animeTask = anime.timeline({
     // 全局 easing（可被每个 add 覆盖）
     easing: 'easeOutQuad'
   }).add({
@@ -80,7 +91,11 @@ onMounted(() => {
     opacity: [0, 1],
     duration: 1000,
     easing: 'easeOutQuad',
-    delay: anime.stagger(1000, { start: 0 }) // 每个子元素延迟 100ms
+    delay: anime.stagger(1000, { start: 0 }), // 每个子元素延迟 100ms
+     complete: function () {
+     // 前摇结束，开始下一阶段，给list 赋值
+      handelListPush()
+    }
   }, '-=5000')
   .add({
     // 表格淡出
@@ -95,9 +110,43 @@ onMounted(() => {
   })
 })
 
-const currentActive = ref(1)
+const currentList = ref([])
+const currentKey = ref('');
+const currentActive = ref(0);
+const handelListPush = () => {
+  const currentData = props.eventList[currentActive.value];
+  currentKey.value = currentData.key;
+  currentList.value = currentData.data;
+  console.log(currentList.value, 333333)
+}
+
+let animeTimer = ref(null);
 const handelJSAnimation = () => {
-  alert(9)
+  document.querySelector('.hidden').classList.remove('hidden');
+  animeData()
+  animeTimer = setInterval(() => {
+    animeData()
+  }, 2000)
+}
+
+const animeData = () => {
+  handelListPush();
+
+
+  document.querySelectorAll('.img-list li img').forEach((item, index) => {
+    item.classList.remove('scaleLarger');
+  });
+  
+  const imgDom = document.querySelector(`.img${currentKey.value} img`);
+  imgDom.classList.add('scaleLarger');
+
+  
+  
+
+  currentActive.value = currentActive.value + 1;
+  if(currentActive.value >= props.eventList.length){
+    currentActive.value = 0;
+  }
 }
 
 import logo01 from './imgs/01.png'
@@ -114,78 +163,7 @@ const imgList = [
   { img: logo05,  key: '05' },
 ]
 
-const eventList = [
-  {
-    ratio: 20,
-    color: '#FF6B6B',
-    key: '01',
-    name: 'xxx单位1',
-    data: {
-      time: '2021-09-01',
-      type: 'SQL注入',
-      origin: '123.25.6.78（上海）',
-      to: '123.25.35.36（OA服务）',
-      level: '严重',
-      class: 'level1'
-    }
-  },
-  {
-    ratio: 20,
-    color: '#FFA548',
-    key: '02',
-    name: 'xxx单位2',
-    data: {
-      time: '2021-09-01',
-      type: 'SQL注入',
-      origin: '123.25.6.78（上海）',
-      to: '123.25.35.36（OA服务）',
-      level: '高危',
-      class: 'level2'
-    }
-  },
-  {
-    ratio: 20,
-    color: '#8C67FE',
-    key: '03',
-    name: 'xxx单位3',
-    data: {
-      time: '2021-09-01',
-      type: 'SQL注入',
-      origin: '123.25.6.78（上海）',
-      to: '123.25.35.36（OA服务）',
-      level: '严重',
-      class: 'level1'
-    }
-  },
-  {
-    ratio: 20,
-    color: '#2CC46C',
-    key: '04',
-    name: 'xxx单位4',
-    data: {
-      time: '2021-09-01',
-      type: 'SQL注入',
-      origin: '123.25.6.78（上海）',
-      to: '123.25.35.36（OA服务）',
-      level: '高危',
-      class: 'level2'
-    }
-  },
-  {
-    ratio: 20,
-    color: '#47CDEE',
-    key: '05',
-    name: 'xxx单位5',
-    data: {
-      time: '2021-09-01',
-      type: 'SQL注入',
-      origin: '123.25.6.78（上海）',
-      to: '123.25.35.36（OA服务）',
-      level: '严重',
-      class: 'level1'
-    }
-  }
-]
+
 
 
 // 画扇形 
@@ -287,12 +265,12 @@ const eventList = [
 
 .data-list li .origin_to{
   display: inline-block;
-  width: 260px;
+  width: 280px;
 }
 
 .data-list li .type{
   display: inline-block;
-  width: 80px;
+  width: 60px;
 }
 
 .data-list li .level{
@@ -337,12 +315,17 @@ const eventList = [
 }
 .img-list li{
   position: absolute;
-  transform-origin: 80px 80px;
+  left: 37px;
+  top: 80px;
+  width: 86px;
+  height: 86px;
+  transform-origin: 50% 0px;
+  /* transform: translateY(-60px); */
 }
 
 
 .img-list .img01{
-  transform: rotate(var(--ration));
+  transform: rotate(calc(3 * var(--ration)));
   .key{
 color: #fff;
 }
@@ -354,20 +337,20 @@ color: #fff;
 
 .img-list .img02{
 
-   transform: rotate(calc(2 * var(--ration)));
+   transform: rotate(calc(4 * var(--ration)));
 }
 
 .img-list .img03{
-  transform: rotate(calc(3 * var(--ration)));
+  transform: rotate(calc(5 * var(--ration)));
 }
 
 .img-list .img04{
 
-   transform: rotate(calc(4 * var(--ration)));
+   transform: rotate(calc(6 * var(--ration)));
 }
 
 .img-list .img05{
-
+  transform: rotate(calc(2 * var(--ration)));
 }
 
 .img_text .key{
@@ -386,57 +369,64 @@ color: #fff;
 }
 
 .text01 .key{
-  top: 44px;
-  left: 84px;
+  top: -36px;
+  left: 50px;
 }
 
 .text01 .ratio{
-  top: 20px;
-  left: 80px;
-}
-
-.text02 .key{
-  top: 70px;
-  left: 100px;
-}
-
-.text02 .ratio{
-  top: 89px;
-  left: 110px;
-}
-
-.text03 .key{
-  top: 94px;
-  left: 77px;
-}
-
-.text03 .ratio{
-  top: 130px;
+  top: -70px;
   left: 60px;
 }
 
+.text02 .key{
+  top: -4px;
+  left: 60px;
+}
+
+.text02 .ratio{
+  top: 0;
+  left: 86px;
+}
+
+.text03 .key{
+  top: 20px;
+  left: 34px;
+}
+
+.text03 .ratio{
+  top: 46px;
+  left: 30px;
+}
+
 .text04 .key{
-  top: 82px;
-  left: 50px;
+  top: 0;
+  left: 6px;
 }
 
 .text04 .ratio{
-  top: 98px;
-  left: 0px;
+  top: 0;
+  left: -30px;
 }
 
 .text05 .key{
-  top: 50px;
-  left: 50px;
+  top: -32px;
+  left: 18px;
 }
 
 .text05 .ratio{
-  top: 30px;
-  left: 4px;
+  top: -66px;
+  left: -8px;
 }
 
 
-.hidden{
+.hidden span{
   opacity: 0;
+}
+
+
+.scaleLarger{
+  transform: scale(1.15) ;
+  z-index: 999;
+  transition: all 0.3s ease-in-out;
 }
 </style>

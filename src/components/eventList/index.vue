@@ -313,6 +313,26 @@ const imgList = [
   box-shadow: inset 0px 0px 18px 0px rgba(255,143,45,0.28); 
 }
 
+.data-list li.level3 .level{
+  border-color: rgb(41, 196, 108);
+  color: rgb(41, 196, 108);
+}
+
+.data-list li.level3{
+  background: rgba(41, 196, 108,0.11);
+  box-shadow: inset 0px 0px 18px 0px rgba(41, 196, 108, 0.28);
+}
+
+.data-list li.level4 .level{
+  border-color: rgb(26, 179, 213);
+  color: rgb(26, 179, 213);
+}
+
+.data-list li.level4{
+  background: rgba(26, 179, 213,0.11);
+  box-shadow: inset 0px 0px 18px 0px rgba(26, 179, 213,0.28);
+}
+
 .img-list{
   list-style: none;
   opacity: 0;

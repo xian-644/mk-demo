@@ -34,15 +34,15 @@ const eventList = [
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位1）',
-      level: '严重',
-      class: 'level1'
+      level: '中危',
+      class: 'level3'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位1）',
-      level: '高危',
-      class: 'level2'
+      level: '低危',
+      class: 'level4'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',
@@ -76,15 +76,16 @@ const eventList = [
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位2））',
-      level: '严重',
-      class: 'level1'
+     
+      level: '低危',
+      class: 'level4'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位2））',
-      level: '高危',
-      class: 'level2'
+      level: '中危',
+      class: 'level3'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',
@@ -118,15 +119,15 @@ const eventList = [
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位3）',
-      level: '严重',
-      class: 'level1'
+      level: '低位',
+      class: 'level4'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位3）',
-      level: '高危',
-      class: 'level2'
+      level: '中危',
+      class: 'level3'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',
@@ -160,15 +161,15 @@ const eventList = [
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位4）',
-      level: '严重',
-      class: 'level1'
+      level: '中危',
+      class: 'level3'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位4）',
-      level: '高危',
-      class: 'level2'
+      level: '低危',
+      class: 'level4'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',
@@ -202,15 +203,15 @@ const eventList = [
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位5）',
-      level: '严重',
-      class: 'level1'
+      level: '中危',
+      class: 'level3'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',
       origin: '123.25.6.78（上海）',
       to: '123.25.35.36（OA服务 单位5）',
-      level: '高危',
-      class: 'level2'
+      level: '低危',
+      class: 'level4'
     }, {
       time: '2021-09-01',
       type: 'SQL注入',

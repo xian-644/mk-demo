@@ -228,9 +228,9 @@ const executeComplexAnimation = async () => {
     }).finished
     
     // 6. 所有数字同时动态变化动画 + 图片旋转
-    const targetPending = props.taskData.value[i].pending
-    const targetCompleted = props.taskData.value[i].completed
-    const targetProgress = props.taskData.value[i].progress
+    const targetPending = props.taskData[i].pending
+    const targetCompleted = props.taskData[i].completed
+    const targetProgress = props.taskData[i].progress
     
     // 获取right区域的图片元素
     const positiveImg = rightEl.querySelector('.positive')

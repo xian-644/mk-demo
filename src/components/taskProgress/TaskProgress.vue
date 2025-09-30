@@ -38,6 +38,45 @@ onMounted(() => {
   executeComplexAnimation()
 })
 
+// 创建圆形阴影效果的辅助函数
+const createCircularShadow = (element, direction, opacity) => {
+  // 移除已存在的阴影
+  removeCircularShadow(element)
+  
+  const shadow = document.createElement('div')
+  shadow.className = 'collision-shadow'
+  shadow.style.cssText = `
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(123, 231, 255, ${opacity}) 0%, rgba(87, 225, 255, ${opacity * 0.6}) 30%, rgba(0, 255, 110, ${opacity * 0.3}) 60%, transparent 80%);
+    pointer-events: none;
+    z-index: 5;
+    top: 50%;
+    transform: translateY(-50%);
+    ${direction === 'right' ? 'left: 100%;' : 'right: 100%;'}
+    ${direction === 'right' ? 'margin-left: -5px;' : 'margin-right: -5px;'}
+  `
+  
+  element.style.position = 'relative'
+  element.appendChild(shadow)
+}
+
+const updateCircularShadow = (element, direction, opacity) => {
+  const shadow = element.querySelector('.collision-shadow')
+  if (shadow) {
+    shadow.style.background = `radial-gradient(circle, rgba(123, 231, 255, ${opacity}) 0%, rgba(87, 225, 255, ${opacity * 0.6}) 30%, rgba(0, 255, 110, ${opacity * 0.3}) 60%, transparent 80%)`
+  }
+}
+
+const removeCircularShadow = (element) => {
+  const shadow = element.querySelector('.collision-shadow')
+  if (shadow) {
+    shadow.remove()
+  }
+}
+
 const executeComplexAnimation = async () => {
   const listItems = document.querySelectorAll('.task-content li')
   const container = document.querySelector('.task-content')
@@ -111,8 +150,13 @@ const executeComplexAnimation = async () => {
     //   easing: 'easeOutQuad'
     // }).finished
     
-    // 3. left和right碰撞动画 - 使用更流畅的单一动画曲线
-    const collisionDistance = 65
+    // 3. left和right碰撞动画 - 先设置初始透明度，然后移动并显示，最后碰撞时添加阴影
+    // 计算正确的碰撞距离：left宽度53px + center宽度140px + right宽度50px = 243px
+    // center元素被隐藏，所以left和right需要移动的距离是 (140px + 53px/2 + 50px/2) / 2 ≈ 96px
+    const collisionDistance = 80
+    
+    // 初始设置left和right为透明
+    anime.set([leftEl, rightEl], { opacity: 0 })
     
     // 创建自定义的碰撞回弹动画时间线
     const collisionTimeline = anime.timeline({
@@ -122,6 +166,7 @@ const executeComplexAnimation = async () => {
     collisionTimeline
       .add({
         targets: [leftEl, rightEl],
+        opacity: [0, 1], // 透明度从0到1
         translateX: function(el) {
           return el === leftEl ? collisionDistance : -collisionDistance
         },
@@ -134,13 +179,44 @@ const executeComplexAnimation = async () => {
           return el === leftEl ? collisionDistance * 0.3 : -collisionDistance * 0.3
         },
         duration: 120,
-        easing: 'easeOutCubic'
+        easing: 'easeOutCubic',
+        begin: function() {
+          // 碰撞开始时添加圆形阴影效果，使用伪元素创建圆形光晕
+          createCircularShadow(leftEl, 'right', 0.8)
+          createCircularShadow(rightEl, 'left', 0.8)
+        },
+        update: function(anim) {
+          // 回弹阶段逐渐减少阴影
+          const progress = anim.progress / 100
+          const opacity = (1 - progress * 0.5) * 0.6
+          
+          updateCircularShadow(leftEl, 'right', opacity)
+          updateCircularShadow(rightEl, 'left', opacity)
+        }
       }, '-=50')
       .add({
         targets: [leftEl, rightEl],
         translateX: 0,
         duration: 380,
-        easing: 'easeOutQuint'
+        easing: 'easeOutQuint',
+        update: function(anim) {
+          // 恢复阶段逐渐减少阴影直到消失
+          const progress = anim.progress / 100
+          const opacity = (1 - progress) * 0.4
+          
+          if (opacity > 0.05) {
+            updateCircularShadow(leftEl, 'right', opacity)
+            updateCircularShadow(rightEl, 'left', opacity)
+          } else {
+            removeCircularShadow(leftEl)
+            removeCircularShadow(rightEl)
+          }
+        },
+        complete: function() {
+          // 动画完成后确保清除阴影
+          removeCircularShadow(leftEl)
+          removeCircularShadow(rightEl)
+        }
       })
     
     await collisionTimeline.finished

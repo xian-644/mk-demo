@@ -143,7 +143,7 @@ const executeComplexAnimation = async () => {
     await Promise.all([currentAnimation.finished, completedMaskAnimation, pendingMaskAnimation])
     
     // 3. left和right碰撞动画 - 先设置初始透明度，然后移动并显示，最后碰撞时添加阴影
-    const collisionDistance = 96
+    const collisionDistance = 80
     
     // 初始设置left和right为透明
     anime.set([leftEl, rightEl], { opacity: 0 })
@@ -160,7 +160,7 @@ const executeComplexAnimation = async () => {
         translateX: function(el) {
           return el === leftEl ? collisionDistance : -collisionDistance
         },
-        duration: 450,
+        duration: 800,
         easing: 'easeInOutQuart'
       })
       .add({
@@ -420,12 +420,12 @@ const startCycleAnimation = async () => {
     await anime({
       targets: listItems,
       opacity: 0,
-      duration: 800,
+      duration: 0,
       easing: 'easeInOutQuart'
     }).finished
     
     // 等待一段时间，然后重新开始完整动画
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await new Promise(resolve => setTimeout(resolve, 0))
     
     // 重置所有元素的visibility和opacity，准备重新开始动画
     listItems.forEach(li => {

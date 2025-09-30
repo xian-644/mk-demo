@@ -1,7 +1,7 @@
 <template>
   <!-- <div id="app"> -->
-    <TaskProgress />
-    <!-- <EventList :eventList="eventList" /> -->
+    <!-- <TaskProgress /> -->
+    <EventList :eventList="eventList" />
   <!-- </div> -->
 </template>
 
@@ -14,7 +14,7 @@ const eventList = [
     ratio: 20,
     color: '#FF6B6B',
     key: '01',
-    name: 'xxx单位1',
+    name: '南充南充南充南充',
     data: [{
       time: '2021-09-01',
       type: 'SQL注入',
@@ -56,7 +56,7 @@ const eventList = [
     ratio: 20,
     color: '#FFA548',
     key: '02',
-    name: 'xxx单位2',
+    name: '南充南充南充南充',
     data: [{
       time: '2021-09-01',
       type: 'SQL注入',
@@ -99,7 +99,7 @@ const eventList = [
     ratio: 20,
     color: '#8C67FE',
     key: '03',
-    name: 'xxx单位3',
+    name: '南充南充南充南充',
     data: [{
       time: '2021-09-01',
       type: 'SQL注入',
@@ -141,7 +141,7 @@ const eventList = [
     ratio: 20,
     color: '#2CC46C',
     key: '04',
-    name: 'xxx单位4',
+    name: '南充南充南充南充',
     data: [{
       time: '2021-09-01',
       type: 'SQL注入',
@@ -183,7 +183,7 @@ const eventList = [
     ratio: 20,
     color: '#47CDEE',
     key: '05',
-    name: 'xxx单位5',
+    name: '南充南充南充南充',
     data: [{
       time: '2021-09-01',
       type: 'SQL注入',

@@ -5,6 +5,10 @@
       <img src="./imgs/title.png" alt="" srcset="">
     </div>
 
+     <ul class="name-list">
+          <li :class="{'activeName': el.key == currentKey}" v-for="el in eventList" :style="`color: ${ el.color }`">{{ el.name }}</li>
+        </ul>
+
     <div class="event-list">
       <div class="left">
         <div class="sector"></div>
@@ -26,9 +30,6 @@
 
       </div>
       <div class="right">
-        <ul class="name-list">
-          <li :class="{'activeName': el.key == currentKey}" v-for="el in eventList" :style="`color: ${ el.color }`">{{ el.name }}</li>
-        </ul>
         <ul class="data-list">
           <li v-for="el in currentList" :class="el.class">
            <div class="hidden">
@@ -203,7 +204,7 @@ const imgList = [
   width: 180px;
   height: 180px;
   margin-right: 30px;
-  margin-top: 107px;
+  margin-top: 77px;
   padding: 10px;
   position: relative;
 }
@@ -235,7 +236,7 @@ const imgList = [
 
 .name-list{
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   list-style: square;
   font-size: 12px;
   line-height: 12px;
@@ -243,6 +244,11 @@ const imgList = [
   margin-top: 20px;
   margin-bottom: 15px;
   margin-left: 20px;
+  padding-right: 20px;
+}
+
+.name-list li{
+  margin-left: 36px;
 }
 
 

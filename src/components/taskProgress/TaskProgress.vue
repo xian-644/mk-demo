@@ -33,6 +33,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import anime from 'animejs/lib/anime.es.js'
+
 onMounted(() => {
   // 执行复杂的进入动画序列
   executeComplexAnimation()
@@ -119,7 +120,7 @@ const executeComplexAnimation = async () => {
       scale: [1, 1.5],
       translateX: moveX,
       translateY: moveY,
-      duration: 100,
+      duration: 10,
       easing: 'easeOutCubic'
     })
     
@@ -141,19 +142,8 @@ const executeComplexAnimation = async () => {
     
     await Promise.all([currentAnimation.finished, completedMaskAnimation, pendingMaskAnimation])
     
-    // // 2. 隐藏center元素
-    // await anime({
-    //   targets: centerEl,
-    //   opacity: 0,
-    //   scale: 0.8,
-    //   duration: 300,
-    //   easing: 'easeOutQuad'
-    // }).finished
-    
     // 3. left和right碰撞动画 - 先设置初始透明度，然后移动并显示，最后碰撞时添加阴影
-    // 计算正确的碰撞距离：left宽度53px + center宽度140px + right宽度50px = 243px
-    // center元素被隐藏，所以left和right需要移动的距离是 (140px + 53px/2 + 50px/2) / 2 ≈ 96px
-    const collisionDistance = 80
+    const collisionDistance = 96
     
     // 初始设置left和right为透明
     anime.set([leftEl, rightEl], { opacity: 0 })
@@ -324,7 +314,7 @@ const executeComplexAnimation = async () => {
     })
     
     // 短暂延迟后开始下一个动画
-    await new Promise(resolve => setTimeout(resolve, 300))
+    // await new Promise(resolve => setTimeout(resolve, 300))
   }
   
   // 所有li都展示完成后，开始循环动画
@@ -357,10 +347,10 @@ const startCycleAnimation = async () => {
       const moveX = containerCenterX - (currentLi.offsetLeft + currentLi.offsetWidth / 2)
       const moveY = containerCenterY - (currentLi.offsetTop + currentLi.offsetHeight / 2)
       
-      // 其他li元素
-      const otherLis = Array.from(listItems).filter((_, index) => index !== i)
+      // 其他li元素 - 只包含还未执行过动画的元素（索引大于当前i的）
+      const otherLis = Array.from(listItems).filter((_, index) => index > i)
       
-      // 1. 放大到中间，其他元素半透明
+      // 1. 放大到中间，其他未执行动画的元素半透明
       const scaleAnimation = anime({
         targets: currentLi,
         scale: 1.5,
@@ -370,14 +360,14 @@ const startCycleAnimation = async () => {
         easing: 'easeOutCubic'
       })
       
-      const fadeOthersAnimation = anime({
+      const fadeOthersAnimation = otherLis.length > 0 ? anime({
         targets: otherLis,
         opacity: 0.3,
         duration: 600,
         easing: 'easeOutQuad'
-      })
+      }) : Promise.resolve()
       
-      await Promise.all([scaleAnimation.finished, fadeOthersAnimation.finished])
+      await Promise.all([scaleAnimation.finished, fadeOthersAnimation])
       
       // 2. 图片转动三圈
       const rotationAnimation = anime({
@@ -392,33 +382,29 @@ const startCycleAnimation = async () => {
       // 3. 等待旋转完成
       await rotationAnimation.finished
       
-      // 4. 淡出并恢复原位
-      const fadeOutAnimation = anime({
+      // 4. 当前元素回到原位并隐藏（不可见）
+      await anime({
         targets: currentLi,
-        opacity: 0.8,
+        opacity: 0,
         scale: 1,
         translateX: 0,
         translateY: 0,
         duration: 600,
         easing: 'easeInOutQuart'
-      })
-      
-      const restoreOthersAnimation = anime({
-        targets: otherLis,
-        opacity: 1,
-        duration: 500,
-        easing: 'easeOutQuad'
-      })
-      
-      await Promise.all([fadeOutAnimation.finished, restoreOthersAnimation.finished])
-      
-      // 恢复当前元素完全可见
-      await anime({
-        targets: currentLi,
-        opacity: 1,
-        duration: 300,
-        easing: 'easeOutQuad'
       }).finished
+      
+      // 设置为 visibility: hidden 确保完全不可见
+      currentLi.style.visibility = 'hidden'
+      
+      // 5. 如果还有未执行的元素，恢复它们的透明度为1
+      if (otherLis.length > 0) {
+        await anime({
+          targets: otherLis,
+          opacity: 1,
+          duration: 500,
+          easing: 'easeOutQuad'
+        }).finished
+      }
       
       // 移除动画类
       currentLi.classList.remove('animating')
@@ -429,6 +415,33 @@ const startCycleAnimation = async () => {
       // 短暂延迟后开始下一个
       await new Promise(resolve => setTimeout(resolve, 500))
     }
+    
+    // 所有元素都完成循环后，全部隐藏
+    await anime({
+      targets: listItems,
+      opacity: 0,
+      duration: 800,
+      easing: 'easeInOutQuart'
+    }).finished
+    
+    // 等待一段时间，然后重新开始完整动画
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // 重置所有元素的visibility和opacity，准备重新开始动画
+    listItems.forEach(li => {
+      li.style.visibility = 'visible'
+      li.style.opacity = '0'
+    })
+    
+    // 重置所有显示数据为0，准备重新开始动画
+    displayData.value.forEach(item => {
+      item.pending = 0
+      item.completed = 0
+      item.progress = 0
+    })
+    
+    // 重新执行完整的动画序列
+    await executeComplexAnimation()
   }
 }
 

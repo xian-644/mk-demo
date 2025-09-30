@@ -176,7 +176,7 @@ const imgList = [
 // 画扇形 
 </script>
 
-<style>
+<style scoped lang="less">
 
 
 .event-list-wrapper {

@@ -228,9 +228,9 @@ const executeComplexAnimation = async () => {
     }).finished
     
     // 6. 所有数字同时动态变化动画 + 图片旋转
-    const targetPending = taskData.value[i].pending
-    const targetCompleted = taskData.value[i].completed
-    const targetProgress = taskData.value[i].progress
+    const targetPending = props.taskData.value[i].pending
+    const targetCompleted = props.taskData.value[i].completed
+    const targetProgress = props.taskData.value[i].progress
     
     // 获取right区域的图片元素
     const positiveImg = rightEl.querySelector('.positive')
@@ -453,37 +453,14 @@ const getImgBg = (level) => {
   return new URL(`./imgs/${level}-bg.png`, import.meta.url).href
 }
 
-// 任务数据
-const taskData = ref([
-  {
-    level: 'level1',
-    label: '严重',
-    pending: 12,
-    completed: 104,
-    progress: 59,
-  },
-  {
-    level: 'level2',
-    label: '高危',
-    pending: 22,
-    completed: 104,
-    progress: 89,
-  },
-  {
-    level: 'level3',
-    label: '中危',
-    pending: 9,
-    completed: 32,
-    progress: 29,
-  },
-  {
-    level: 'level4',
-    label: '低危',
-    pending: 78,
-    completed: 360,
-    progress: 59,
+
+const props = defineProps({
+  taskData: {
+    type: Array,
+    required: true
   }
-])
+})
+
 
 // 显示数据（用于动画）
 const displayData = ref([

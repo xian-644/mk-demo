@@ -1,7 +1,7 @@
 <template>
   <!-- <div id="app"> -->
-    <!-- <TaskProgress /> -->
-    <EventList :eventList="eventList" />
+    <TaskProgress :taskData="taskData" />
+    <!-- <EventList :eventList="eventList" /> -->
   <!-- </div> -->
 </template>
 
@@ -220,6 +220,39 @@ const eventList = [
       level: '严重',
       class: 'level1'
     }],
+  }
+]
+
+
+// 任务数据
+const taskData = [
+  {
+    level: 'level1',
+    label: '严重',
+    pending: 12,
+    completed: 104,
+    progress: 59,
+  },
+  {
+    level: 'level2',
+    label: '高危',
+    pending: 22,
+    completed: 104,
+    progress: 89,
+  },
+  {
+    level: 'level3',
+    label: '中危',
+    pending: 9,
+    completed: 32,
+    progress: 29,
+  },
+  {
+    level: 'level4',
+    label: '低危',
+    pending: 78,
+    completed: 360,
+    progress: 59,
   }
 ]
 </script>

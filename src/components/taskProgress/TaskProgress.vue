@@ -35,8 +35,8 @@ import { ref, computed, onMounted } from 'vue'
 import anime from 'animejs/lib/anime.es.js'
 
 onMounted(() => {
-  // 执行复杂的进入动画序列
-  executeComplexAnimation()
+  // 启动循环控制器
+  startNextAnimationCycle()
 })
 
 // 创建圆形阴影效果的辅助函数
@@ -80,370 +80,224 @@ const removeCircularShadow = (element) => {
 
 const executeComplexAnimation = async () => {
   const listItems = document.querySelectorAll('.task-content li')
-  const container = document.querySelector('.task-content')
   
-  // 初始化所有元素为不可见
-  anime.set(listItems, { opacity: 0 })
+  // 动作1：一开始全部隐藏
+  // 注意：父级 li 保持可见，只隐藏子元素，否则子元素淡入也不会显示
+  anime.set(listItems, { opacity: 1 })
   
-  // 为每个li元素执行动画序列
-  for (let i = 0; i < listItems.length; i++) {
-    const currentLi = listItems[i]
-    const leftEl = currentLi.querySelector('.left')
-    const centerEl = currentLi.querySelector('.center')
-    const rightEl = currentLi.querySelector('.right')
-    const numEl = rightEl.querySelector('.num')
+  // 动作1：四个图标同时淡入
+  const leftElements = Array.from(listItems).map(li => li.querySelector('.left'))
+  // 先隐藏左侧图标，避免初始闪现
+  anime.set(leftElements, { opacity: 0 })
+  // 提前隐藏右侧，避免初始露出
+  const rightElementsInit = Array.from(listItems).map(li => li.querySelector('.right'))
+  anime.set(rightElementsInit, { opacity: 0 })
+  // 提前隐藏中间图片与内容，确保动作1期间只有左侧显示
+  const centerImages = Array.from(listItems).map(li => li.querySelector('.center img'))
+  const contentElements = Array.from(listItems).map(li => li.querySelector('.content'))
+  anime.set(centerImages, { opacity: 0 })
+  anime.set(contentElements, { opacity: 0 })
 
-    centerEl.style.opacity = 0;
-    
-    // 添加动画类
-    currentLi.classList.add('animating')
-    
-    // 获取容器和元素的位置信息
-    const containerRect = container.getBoundingClientRect()
-    const liRect = currentLi.getBoundingClientRect()
-    const containerCenterX = containerRect.width / 2
-    const containerCenterY = containerRect.height / 2
-    
-    // 计算移动到中心的距离
-    const moveX = containerCenterX - (currentLi.offsetLeft + currentLi.offsetWidth / 2)
-    const moveY = containerCenterY - (currentLi.offsetTop + currentLi.offsetHeight / 2)
-    
-    // 1. 显示并放大1.5倍移动到中间，同时为其他元素添加蒙层
-    // 区分已完成动画的li和未开始动画的li
-    const completedLis = Array.from(listItems).filter((_, index) => index < i)  // 已完成的
-    const pendingLis = Array.from(listItems).filter((_, index) => index > i)    // 未开始的
-    
-    // 同时执行当前元素放大和其他元素添加蒙层
-    const currentAnimation = anime({
-      targets: currentLi,
+  await anime({
+    targets: leftElements,
+    opacity: [0, 1],
+    duration: 1500,
+    easing: 'easeOutQuad'
+  }).finished
+  // 动作1后暂停500ms
+  await new Promise(resolve => setTimeout(resolve, 500))
+  
+  // 动作2：四个图片框从上至下依次淡入；第3个开始时，触发内容从上至下依次淡入，并逐项开启数字增长
+  // 注：centerImages 与 contentElements 已在动作1前声明并设为隐藏
+  const imageTimeline = anime.timeline({ easing: 'easeOutQuad' })
+  
+  for (let i = 0; i < centerImages.length; i++) {
+    // 每行图片逐项淡入（每项300ms，间隔500ms）
+    imageTimeline.add({
+      targets: centerImages[i],
       opacity: [0, 1],
-      scale: [1, 1.5],
-      translateX: moveX,
-      translateY: moveY,
-      duration: 10,
-      easing: 'easeOutCubic'
-    })
-    
-    // 已完成的li设为半透明
-    const completedMaskAnimation = completedLis.length > 0 ? anime({
-      targets: completedLis,
-      opacity: 0.3,
-      duration: 600,
+      duration: 300,
       easing: 'easeOutQuad'
-    }) : Promise.resolve()
+    }, i * 500)
     
-    // 未开始的li完全隐藏
-    const pendingMaskAnimation = pendingLis.length > 0 ? anime({
-      targets: pendingLis,
-      opacity: 0,
-      duration: 600,
-      easing: 'easeOutQuad'
-    }) : Promise.resolve()
-    
-    await Promise.all([currentAnimation.finished, completedMaskAnimation, pendingMaskAnimation])
-    
-    // 3. left和right碰撞动画 - 先设置初始透明度，然后移动并显示，最后碰撞时添加阴影
-    const collisionDistance = 80
-    
-    // 初始设置left和right为透明
-    anime.set([leftEl, rightEl], { opacity: 0 })
-    
-    // 创建自定义的碰撞回弹动画时间线
-    const collisionTimeline = anime.timeline({
-      easing: 'linear'
-    })
-    
-    collisionTimeline
-      .add({
-        targets: [leftEl, rightEl],
-        opacity: [0, 1], // 透明度从0到1
-        translateX: function(el) {
-          return el === leftEl ? collisionDistance : -collisionDistance
-        },
-        duration: 800,
-        easing: 'easeInOutQuart'
-      })
-      .add({
-        targets: [leftEl, rightEl],
-        translateX: function(el) {
-          return el === leftEl ? collisionDistance * 0.3 : -collisionDistance * 0.3
-        },
-        duration: 120,
-        easing: 'easeOutCubic',
-        begin: function() {
-          // 碰撞开始时添加圆形阴影效果，使用伪元素创建圆形光晕
-          createCircularShadow(leftEl, 'right', 0.8)
-          createCircularShadow(rightEl, 'left', 0.8)
-        },
-        update: function(anim) {
-          // 回弹阶段逐渐减少阴影
-          const progress = anim.progress / 100
-          const opacity = (1 - progress * 0.5) * 0.6
-          
-          updateCircularShadow(leftEl, 'right', opacity)
-          updateCircularShadow(rightEl, 'left', opacity)
-        }
-      }, '-=50')
-      .add({
-        targets: [leftEl, rightEl],
-        translateX: 0,
-        duration: 380,
-        easing: 'easeOutQuint',
-        update: function(anim) {
-          // 恢复阶段逐渐减少阴影直到消失
-          const progress = anim.progress / 100
-          const opacity = (1 - progress) * 0.4
-          
-          if (opacity > 0.05) {
-            updateCircularShadow(leftEl, 'right', opacity)
-            updateCircularShadow(rightEl, 'left', opacity)
-          } else {
-            removeCircularShadow(leftEl)
-            removeCircularShadow(rightEl)
+    // 当第3个图片（索引2）开始时，插入内容逐项淡入（每项300ms，间隔500ms）
+    if (i === 2) {
+      for (let j = 0; j < contentElements.length; j++) {
+        imageTimeline.add({
+          targets: contentElements[j],
+          opacity: [0, 1],
+          duration: 300,
+          easing: 'easeOutQuad',
+          begin: function() {
+            // 内容开始出现时，逐项启动该行的 pending/completed 数字增长
+            animateContentNumbers(j)
           }
-        },
-        complete: function() {
-          // 动画完成后确保清除阴影
-          removeCircularShadow(leftEl)
-          removeCircularShadow(rightEl)
-        }
-      })
-    
-    await collisionTimeline.finished
-    
-    // 5. center从底部进入
-    anime.set(centerEl, {
-      translateY: 60,
-      opacity: 0,
-      scale: 0.8
-    })
-    
-    await anime({
-      targets: centerEl,
-      translateY: 0,
-      opacity: 1,
-      scale: 1,
-      duration: 600,
-      easing: 'easeOutBack(1.7)'
-    }).finished
-    
-    // 6. 所有数字同时动态变化动画 + 图片旋转
-    const targetPending = props.taskData[i].pending
-    const targetCompleted = props.taskData[i].completed
-    const targetProgress = props.taskData[i].progress
-    
-    // 获取right区域的图片元素
-    const positiveImg = rightEl.querySelector('.positive')
-    const negativeImg = rightEl.querySelector('.negative')
-    
-    // 创建临时对象用于动画计算
-    const tempNumbers = { pending: 0, completed: 0, progress: 0 }
-    
-    // 同时执行数字动画和图片旋转动画
-    const numberAnimation = anime({
-      targets: tempNumbers,
-      pending: targetPending,
-      completed: targetCompleted,
-      progress: targetProgress,
-      duration: 1200,
-      easing: 'easeOutQuart',
-      update: function() {
-        // 将计算结果四舍五入后赋值给显示数据
-        displayData.value[i].pending = Math.round(tempNumbers.pending)
-        displayData.value[i].completed = Math.round(tempNumbers.completed)
-        displayData.value[i].progress = Math.round(tempNumbers.progress)
+        }, (i * 500) + (j * 500) + 50)
       }
-    })
-    
-    // 图片旋转动画 - 快速转动三圈
-    const imageRotation = anime({
-      targets: [positiveImg, negativeImg],
-      rotate: function(el) {
-        // positive图片正转三圈，negative图片反转三圈
-        return el.classList.contains('positive') ? '1080deg' : '-1080deg'
-      },
-      duration: 1200,
-      easing: 'easeInOutQuart'
-    })
-    
-    await Promise.all([numberAnimation.finished, imageRotation.finished])
-    
-    // 等待一下让用户看到最终结果
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 7. 恢复原始大小并移动到最终位置，同时调整其他元素的透明度
-    const restoreAnimation = anime({
-      targets: currentLi,
-      scale: 1,
-      translateX: 0,
-      translateY: 0,
-      duration: 700,
-      easing: 'easeInOutQuart'
-    })
-    
-    // 当前动画完成后，当前元素也变为已完成状态
-    // 所有已完成的元素（包括当前元素）恢复完全可见
-    const allCompletedLis = Array.from(listItems).filter((_, index) => index <= i)
-    const stillPendingLis = Array.from(listItems).filter((_, index) => index > i)
-    
-    const restoreCompletedAnimation = anime({
-      targets: allCompletedLis,
-      opacity: 1,
-      duration: 500,
-      easing: 'easeOutQuad'
-    })
-    
-    // 未开始的li保持隐藏状态
-    const keepPendingHidden = stillPendingLis.length > 0 ? anime({
-      targets: stillPendingLis,
-      opacity: 0,
-      duration: 500,
-      easing: 'easeOutQuad'
-    }) : Promise.resolve()
-    
-    await Promise.all([restoreAnimation.finished, restoreCompletedAnimation.finished, keepPendingHidden])
-    
-    // 移除动画类
-    currentLi.classList.remove('animating')
-    
-    // 重置所有子元素的transform
-    anime.set([leftEl, centerEl, rightEl], {
-      translateX: 0,
-      translateY: 0,
-      scale: 1
-    })
-    
-    // 短暂延迟后开始下一个动画
-    // await new Promise(resolve => setTimeout(resolve, 300))
+    }
   }
   
-  // 所有li都展示完成后，开始循环动画
-  await startCycleAnimation()
+  await imageTimeline.finished
+  
+  // 动作3：右侧内容按从上到下依次淡入，同时旋转并增长“进度”数字
+  const rightElements = Array.from(listItems).map(li => li.querySelector('.right'))
+  const positiveImages = Array.from(listItems).map(li => li.querySelector('.positive'))
+  const negativeImages = Array.from(listItems).map(li => li.querySelector('.negative'))
+  anime.set(rightElements, { opacity: 0 })
+  
+  for (let i = 0; i < rightElements.length; i++) {
+    await anime({
+      targets: rightElements[i],
+      opacity: [0, 1],
+      duration: 400,
+      easing: 'easeOutQuad',
+      begin: function() {
+        // 仅旋转当前行
+        startRotationAnimations([positiveImages[i]], [negativeImages[i]])
+        // 启动该行的 progress 数字增长
+        animateProgressNumber(i)
+      }
+    }).finished
+    // 行与行之间的节奏间隔
+    await new Promise(r => setTimeout(r, 300))
+  }
+  
+  // 动作4：四个“待处置”数字按从上到下依次放大高亮，循环2次；每次放大后暂停1s再进行下一项
+  const pendingNumbers = Array.from(listItems).map(li => li.querySelector('.content .levelColor'))
+  for (let cycle = 0; cycle < 2; cycle++) {
+    for (let i = 0; i < pendingNumbers.length; i++) {
+      // 放大并高亮
+      await anime({
+        targets: pendingNumbers[i],
+        scale: [1, 1.67],
+        duration: 250,
+        easing: 'easeOutBack',
+        update: function(anim) {
+          const progress = anim.progress / 100
+          const brightness = 1 + progress * 0.5
+          pendingNumbers[i].style.filter = `brightness(${brightness})`
+        },
+        complete: function() {
+          pendingNumbers[i].style.filter = 'brightness(1)'
+        }
+      }).finished
+      // 每项放大后暂停1s
+      await new Promise(r => setTimeout(r, 1000))
+      // 再还原
+      await anime({
+        targets: pendingNumbers[i],
+        scale: 1,
+        duration: 200,
+        easing: 'easeInOutQuad'
+      }).finished
+    }
+    // 两轮之间可略微停顿
+    if (cycle < 1) {
+      await new Promise(r => setTimeout(r, 250))
+    }
+  }
+  
+  // 短暂停留后结束本轮，交由循环控制器进入下一轮
+  await new Promise(resolve => setTimeout(resolve, 1000))
 }
 
-// 循环动画函数
-const startCycleAnimation = async () => {
-  const listItems = document.querySelectorAll('.task-content li')
-  const container = document.querySelector('.task-content')
-  
-  // 无限循环
-  while (true) {
-    // 从第一个开始逐一执行循环动画
-    for (let i = 0; i < listItems.length; i++) {
-      const currentLi = listItems[i]
-      const rightEl = currentLi.querySelector('.right')
-      const positiveImg = rightEl.querySelector('.positive')
-      const negativeImg = rightEl.querySelector('.negative')
-      
-      // 添加动画类
-      currentLi.classList.add('animating')
-      
-      // 获取容器中心位置
-      const containerRect = container.getBoundingClientRect()
-      const containerCenterX = containerRect.width / 2
-      const containerCenterY = containerRect.height / 2
-      
-      // 计算移动到中心的距离
-      const moveX = containerCenterX - (currentLi.offsetLeft + currentLi.offsetWidth / 2)
-      const moveY = containerCenterY - (currentLi.offsetTop + currentLi.offsetHeight / 2)
-      
-      // 其他li元素 - 只包含还未执行过动画的元素（索引大于当前i的）
-      const otherLis = Array.from(listItems).filter((_, index) => index > i)
-      
-      // 1. 放大到中间，其他未执行动画的元素半透明
-      const scaleAnimation = anime({
-        targets: currentLi,
-        scale: 1.5,
-        translateX: moveX,
-        translateY: moveY,
-        duration: 800,
-        easing: 'easeOutCubic'
-      })
-      
-      const fadeOthersAnimation = otherLis.length > 0 ? anime({
-        targets: otherLis,
-        opacity: 0.3,
-        duration: 600,
-        easing: 'easeOutQuad'
-      }) : Promise.resolve()
-      
-      await Promise.all([scaleAnimation.finished, fadeOthersAnimation])
-      
-      // 2. 图片转动三圈
-      const rotationAnimation = anime({
-        targets: [positiveImg, negativeImg],
-        rotate: function(el) {
-          return el.classList.contains('positive') ? '+=1080deg' : '-=1080deg'
-        },
-        duration: 2000,
-        easing: 'easeInOutQuart'
-      })
-      
-      // 3. 等待旋转完成
-      await rotationAnimation.finished
-      
-      // 4. 当前元素回到原位并隐藏（不可见）
-      await anime({
-        targets: currentLi,
-        opacity: 0,
-        scale: 1,
-        translateX: 0,
-        translateY: 0,
-        duration: 600,
-        easing: 'easeInOutQuart'
-      }).finished
-      
-      // 设置为 visibility: hidden 确保完全不可见
-      currentLi.style.visibility = 'hidden'
-      
-      // 5. 如果还有未执行的元素，恢复它们的透明度为1
-      if (otherLis.length > 0) {
-        await anime({
-          targets: otherLis,
-          opacity: 1,
-          duration: 500,
-          easing: 'easeOutQuad'
-        }).finished
+/**
+ * 数字动态增长（内容区：pending/completed）
+ */
+const animateContentNumbers = (i) => {
+  const temp = { pending: 0, completed: 0 }
+  const targetPending = props.taskData[i]?.pending || 0
+  const targetCompleted = props.taskData[i]?.completed || 0
+  anime({
+    targets: temp,
+    pending: targetPending,
+    completed: targetCompleted,
+    duration: 1200,
+    easing: 'easeOutQuart',
+    update: function() {
+      if (displayData.value[i]) {
+        displayData.value[i].pending = Math.round(temp.pending)
+        displayData.value[i].completed = Math.round(temp.completed)
       }
-      
-      // 移除动画类
-      currentLi.classList.remove('animating')
-      
-      // 重置旋转角度
-      anime.set([positiveImg, negativeImg], { rotate: 0 })
-      
-      // 短暂延迟后开始下一个
-      await new Promise(resolve => setTimeout(resolve, 500))
     }
-    
-    // 所有元素都完成循环后，全部隐藏
+  })
+}
+
+/**
+ * 数字动态增长（右侧：progress）
+ */
+const animateProgressNumber = (i) => {
+  const temp = { progress: 0 }
+  const targetProgress = props.taskData[i]?.progress || 0
+  anime({
+    targets: temp,
+    progress: targetProgress,
+    duration: 1200,
+    easing: 'easeOutQuart',
+    update: function() {
+      if (displayData.value[i]) {
+        displayData.value[i].progress = Math.round(temp.progress)
+      }
+    }
+  })
+}
+
+// 旋转动画
+const startRotationAnimations = (positiveImages, negativeImages) => {
+  // 正图片旋转动画
+  anime({
+    targets: positiveImages,
+    rotate: '+=1080deg',
+    duration: 1500,
+    easing: 'easeInOutQuart'
+  })
+  
+  // 负图片旋转动画
+  anime({
+    targets: negativeImages,
+    rotate: '-=1080deg',
+    duration: 1500,
+    easing: 'easeInOutQuart'
+  })
+}
+
+// 下轮动画循环
+const startNextAnimationCycle = async () => {
+  const listItems = document.querySelectorAll('.task-content li')
+
+  while (true) {
+    // 执行一整轮动画（动作1-4）
+    await executeComplexAnimation()
+
+    // 动作5：本轮淡出
     await anime({
       targets: listItems,
       opacity: 0,
-      duration: 0,
-      easing: 'easeInOutQuart'
+      duration: 500,
+      easing: 'easeOutQuad'
     }).finished
-    
-    // 等待一段时间，然后重新开始完整动画
-    await new Promise(resolve => setTimeout(resolve, 0))
-    
-    // 重置所有元素的visibility和opacity，准备重新开始动画
-    listItems.forEach(li => {
-      li.style.visibility = 'visible'
-      li.style.opacity = '0'
-    })
-    
-    // 重置所有显示数据为0，准备重新开始动画
+
+    // 短暂停留
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // 重置数字为0
     displayData.value.forEach(item => {
       item.pending = 0
       item.completed = 0
       item.progress = 0
     })
-    
-    // 重新执行完整的动画序列
-    await executeComplexAnimation()
+
+    // 重置所有transform与可见性，准备下一轮
+    anime.set(listItems, {
+      opacity: 1,
+      scale: 1,
+      translateX: 0,
+      translateY: 0
+    })
   }
 }
+
+
 
 const getImg = (level) => {
   return new URL(`./imgs/${level}.png`, import.meta.url).href
@@ -530,14 +384,14 @@ const displayData = ref([
 
   .center{
     margin-right: 12px;
-    width: 140px;
+    width: 302px;
     height: 51px;
     position: relative;
     transform-origin: center center;
 
     img{
       position: absolute;
-      width: 140px;
+      width: 302px;
       height: 51px;
     }
 
